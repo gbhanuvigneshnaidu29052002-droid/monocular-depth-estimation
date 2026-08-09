@@ -1,0 +1,11 @@
+venv/
+.vscode/
+__pycache__/
+*.pyc
+
+# Local outputs
+depth_predictions_output/
+visualizations/
+
+# Model weights
+*.pth
