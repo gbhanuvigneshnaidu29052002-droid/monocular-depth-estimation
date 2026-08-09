@@ -16,7 +16,18 @@ from sklearn.metrics import classification_report
 CSV_FILE = "dataset.csv"         
 IMAGE_DIR = "."
 OUTPUT_DIR = "presentation_assets"
-PRED_FOLDER = "depth_predictions_output"
+
+# Generate timestamped directories to prevent overwriting results
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+RUN_DIR = os.path.join("results", f"run_{timestamp}")
+OUTPUT_DIR = os.path.join(RUN_DIR, "presentation_assets")
+PRED_FOLDER = os.path.join(RUN_DIR, "depth_predictions_output")
+MODEL_SAVE_PATH = os.path.join(RUN_DIR, "best_depth_model.pth")
+
+# Static folders (for copying latest results for easy evaluation)
+STATIC_OUTPUT_DIR = "presentation_assets"
+STATIC_PRED_FOLDER = "depth_predictions_output"
+STATIC_MODEL_PATH = "best_depth_model.pth"
 
 BATCH_SIZE = 8
 EPOCHS = 40                  
@@ -27,7 +38,7 @@ DROPOUT_RATE = 0.3           # Balanced dropout to prevent underfitting
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Ensure secure directory trees exist
-for folder in [OUTPUT_DIR, PRED_FOLDER]:
+for folder in [OUTPUT_DIR, PRED_FOLDER, STATIC_OUTPUT_DIR, STATIC_PRED_FOLDER]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -40,6 +51,7 @@ if torch.cuda.is_available():
 
 print(f"=======================================================")
 print(f"SYSTEM: Monocular Depth Pipeline initiated on: {DEVICE}")
+print(f"Run output directory: {RUN_DIR}")
 print(f"=======================================================")
 
 # ==========================================
@@ -200,7 +212,7 @@ for epoch in range(1, EPOCHS + 1):
     
     if avg_val_loss < best_val_loss:
         best_val_loss = avg_val_loss
-        torch.save(model.state_dict(), "best_depth_model.pth")
+        torch.save(model.state_dict(), MODEL_SAVE_PATH)
 
 # ==========================================
 # 5. DYNAMIC CHART GENERATION (MATPLOTLIB)
@@ -240,7 +252,7 @@ print(f"Graphics Matrix Exported to: '{curve_path}'")
 # 6. PIPELINE QUANTITATIVE EVALUATION
 # ==========================================
 print("\n--- Running Evaluation Metrics on Saved Optimized Weights ---")
-model.load_state_dict(torch.load("best_depth_model.pth", map_location=DEVICE, weights_only=True))
+model.load_state_dict(torch.load(MODEL_SAVE_PATH, map_location=DEVICE, weights_only=True))
 model.eval()
 
 all_labels, all_preds = {i: [] for i in range(4)}, {i: [] for i in range(4)}
@@ -318,9 +330,20 @@ with torch.no_grad():
             out_path = os.path.join(PRED_FOLDER, f"pred_{img_name}")
             cv2.imwrite(out_path, final_output)
 
+# Copy run outputs to default/static directories for evaluation scripts
+if os.path.exists(MODEL_SAVE_PATH):
+    shutil.copy2(MODEL_SAVE_PATH, STATIC_MODEL_PATH)
+    
+for filename in os.listdir(OUTPUT_DIR):
+    shutil.copy2(os.path.join(OUTPUT_DIR, filename), os.path.join(STATIC_OUTPUT_DIR, filename))
+    
+for filename in os.listdir(PRED_FOLDER):
+    shutil.copy2(os.path.join(PRED_FOLDER, filename), os.path.join(STATIC_PRED_FOLDER, filename))
+
 print(f"\n=======================================================")
 print(f"SUCCESS: Pipeline fully executed.")
-print(f"1. Model validation weights saved to 'best_depth_model.pth'")
-print(f"2. Statistical curves saved to '{curve_path}'")
-print(f"3. All visual prediction overlays saved to: '{os.path.abspath(PRED_FOLDER)}'")
+print(f"📂 All run results saved in timestamped directory: {RUN_DIR}")
+print(f"✅ Latest model validation weights copied to: '{STATIC_MODEL_PATH}'")
+print(f"✅ Latest statistical curves copied to: '{STATIC_OUTPUT_DIR}'")
+print(f"✅ Latest visual prediction overlays copied to: '{STATIC_PRED_FOLDER}'")
 print(f"=======================================================")
