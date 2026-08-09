@@ -2,7 +2,7 @@ import os
 import re
 
 # Change this to your actual folder path
-folder = r"C:\Users\gbhan\COLLEGE NOTES ARRANGING\SECOND SEMESTER\Image-Processing and Computer Vision\TASKS\Task 4"
+folder = "."
 
 # Supported image extensions
 valid_ext = {'.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG'}

@@ -2,7 +2,7 @@ import cv2
 import pandas as pd
 import os
 
-folder = r"C:\Users\gbhan\COLLEGE NOTES ARRANGING\SECOND SEMESTER\Image-Processing and Computer Vision\TASKS\Task 4"
+folder = "."
 csv_path = os.path.join(folder, "labels.csv")
 
 label_map = {ord('n'): 'N', ord('m'): 'M', ord('f'): 'F',
