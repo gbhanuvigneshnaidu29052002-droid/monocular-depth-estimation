@@ -65,7 +65,7 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_ds, batch_size=BATCH, shuffle=False, num_workers=0)
 
     # Load best model
-    model = DepthCNN(dropout_p=0.5).to(DEVICE)
+    model = DepthCNN(dropout_p=0.3).to(DEVICE)
     best_path = os.path.join(FOLDER, "best_model.pth")
     if not os.path.exists(best_path):
         raise FileNotFoundError(f"Model file not found at {best_path}. Please train the model first.")

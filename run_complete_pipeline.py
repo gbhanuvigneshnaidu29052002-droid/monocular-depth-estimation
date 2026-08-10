@@ -33,8 +33,8 @@ BATCH_SIZE = 8
 EPOCHS = 50                  
 INITIAL_LR = 1e-4            # Stable warmup learning rate for Phase 1
 FINETUNE_LR = 8e-6           # Balanced fine-tuning rate for Phase 2
-WEIGHT_DECAY = 1e-2          # Strengthened L2 Regularization
-DROPOUT_RATE = 0.5           # Increased dropout rate to prevent overfitting
+WEIGHT_DECAY = 1e-3          # Balanced L2 Regularization to improve accuracy
+DROPOUT_RATE = 0.3           # Moderate dropout to prevent underfitting
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Ensure secure directory trees exist
@@ -168,7 +168,7 @@ for param in model.backbone.parameters():
 best_val_loss = float('inf')
 
 for epoch in range(1, EPOCHS + 1):
-    if epoch == 16:
+    if epoch == 11:
         print("\n--- Phase 2: Fine-tuning Full Network (Backbone Unfrozen) ---")
         for param in model.backbone.parameters():
             param.requires_grad = True
