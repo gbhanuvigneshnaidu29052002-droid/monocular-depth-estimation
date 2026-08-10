@@ -30,11 +30,11 @@ STATIC_PRED_FOLDER = "depth_predictions_output"
 STATIC_MODEL_PATH = "best_depth_model.pth"
 
 BATCH_SIZE = 8
-EPOCHS = 40                  
+EPOCHS = 50                  
 INITIAL_LR = 1e-4            # Stable warmup learning rate for Phase 1
 FINETUNE_LR = 8e-6           # Balanced fine-tuning rate for Phase 2
-WEIGHT_DECAY = 1e-3          # Optimized L2 Regularization
-DROPOUT_RATE = 0.3           # Balanced dropout to prevent underfitting
+WEIGHT_DECAY = 1e-2          # Strengthened L2 Regularization
+DROPOUT_RATE = 0.5           # Increased dropout rate to prevent overfitting
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Ensure secure directory trees exist
@@ -61,6 +61,7 @@ train_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2), 
     transforms.RandomRotation(8),                                       
+    transforms.RandomAffine(degrees=0, translate=(0.05, 0.05), scale=(0.95, 1.05)), # Mimics depth changes
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
@@ -151,6 +152,9 @@ model = RobustDepthCNN(dropout_p=DROPOUT_RATE).to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=INITIAL_LR, weight_decay=WEIGHT_DECAY)
 
+# Learning rate scheduler (disabled in Phase 1, initialized when Phase 2 starts)
+scheduler = None
+
 # Tracking vectors for plotting
 history = {'train_loss': [], 'val_loss': [], 'train_acc': [], 'val_acc': []}
 
@@ -164,12 +168,14 @@ for param in model.backbone.parameters():
 best_val_loss = float('inf')
 
 for epoch in range(1, EPOCHS + 1):
-    if epoch == 11:
+    if epoch == 16:
         print("\n--- Phase 2: Fine-tuning Full Network (Backbone Unfrozen) ---")
         for param in model.backbone.parameters():
             param.requires_grad = True
         for param_group in optimizer.param_groups:
             param_group['lr'] = FINETUNE_LR
+        # Initialize learning rate decay scheduler for fine-tuning stability
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.5)
             
     model.train()
     running_loss, correct, total = 0.0, 0, 0
@@ -208,6 +214,10 @@ for epoch in range(1, EPOCHS + 1):
     history['train_acc'].append(train_accuracy)
     history['val_acc'].append(val_accuracy)
     
+    # Step scheduler in Phase 2
+    if scheduler is not None:
+        scheduler.step()
+        
     print(f"Epoch [{epoch:02d}/{EPOCHS}] | Train Loss: {avg_train_loss:.4f} | Train Acc: {train_accuracy:.4f} || Val Loss: {avg_val_loss:.4f} | Val Acc: {val_accuracy:.4f}")
     
     if avg_val_loss < best_val_loss:
