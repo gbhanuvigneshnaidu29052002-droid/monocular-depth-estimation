@@ -1,11 +1,10 @@
 venv/
+.venv/
 .vscode/
 __pycache__/
 *.pyc
 
-# Local outputs
-depth_predictions_output/
-visualizations/
-
-# Model weights
+# Model weights & temporary outputs
 *.pth
+depth_predictions_output/
+*.log

@@ -61,11 +61,13 @@ print(f"=======================================================")
 # ==========================================
 train_transform = transforms.Compose([
     transforms.Resize((224, 224)),
-    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2), 
-    transforms.RandomRotation(8),                                       
-    transforms.RandomAffine(degrees=0, translate=(0.05, 0.05), scale=(0.95, 1.05)), # Mimics depth changes
+    transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1), 
+    transforms.RandomRotation(15),                                       
+    transforms.RandomAffine(degrees=0, translate=(0.10, 0.10), scale=(0.85, 1.15)), # Mimics depth and scale changes
+    transforms.RandomPerspective(distortion_scale=0.2, p=0.4),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    transforms.RandomErasing(p=0.3, scale=(0.02, 0.2), ratio=(0.3, 3.3), value=0)
 ])
 
 val_transform = transforms.Compose([
