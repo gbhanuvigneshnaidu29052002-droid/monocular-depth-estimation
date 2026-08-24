@@ -8,3 +8,8 @@ __pycache__/
 *.pth
 depth_predictions_output/
 *.log
+
+# Raw dataset & input images
+image_*.jpg
+dataset/
+data/
